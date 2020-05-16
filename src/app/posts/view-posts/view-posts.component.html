@@ -1,0 +1,65 @@
+<div *ngIf="!userIsAuthenticated" class="d-flex justify-content-center mt-7 text-warning ">
+  <strong>Authentication Required   !!   Please Login/Signup</strong>
+</div>
+<div *ngIf="userIsAuthenticated">
+  <div *ngIf="posts.length <= 0" class="center text-muted mt-2">
+    <span> No posts added yet !! </span>
+  </div>
+
+  <div style="text-align: center;" >
+    <button mat-raised-button
+            [style.float]="posts.length ? 'right' :'unset'"
+            routerLink="/addPost"
+            class="addButton">
+      <mat-icon><span class="material-icons">
+        add
+        </span></mat-icon>
+      <span>Add Post</span>
+    </button>
+  </div>
+  
+  <div class="post" *ngFor="let post of posts">
+    <mat-card class="example-card">
+      <mat-card-header>
+        <div mat-card-avatar class="example-header-image"></div>
+        <mat-card-title>{{post.title}}</mat-card-title>
+      </mat-card-header>
+      <!-- <img mat-card-image *ngIf="post.media != undefined" class="cardMedia" src={{post.media}} alt="Photo of a Shiba Inu"> -->
+  <img mat-card-image *ngIf="post.media != undefined" class="cardMedia"  [src]="post.media" alt="Photo of a Shiba Inu">
+      <mat-card-content>
+        <p>
+          {{post.description}}
+        </p>
+      </mat-card-content>
+      <mat-card-actions class="d-flex justify-content-end">
+        <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item
+                [disabled]="!userIsAuthenticated"
+                [routerLink]="['/editPost', post.id]">
+            <mat-icon color="primary">edit</mat-icon>
+            <span>Edit</span>
+          </button>
+          <button mat-menu-item
+                [disabled]="!userIsAuthenticated"
+                (click) = "deletePost(post.id)">
+            <mat-icon color="warn">delete_outline</mat-icon>
+            <span>Delete</span>
+          </button>
+        </mat-menu>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+  <div>
+    <mat-paginator [length]="totalPost"
+                  [pageSize]="postPerPage"
+                  [pageSizeOptions]="pageSizeOptions"
+                  (page)="onPageChange($event)"
+                  class="d-flex justify-content-center">
+    </mat-paginator>
+  </div>
+</div>
+
+

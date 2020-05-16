@@ -1,0 +1,28 @@
+<mat-toolbar color = "primary" class="justify-content-between">
+  <div >
+    <span *ngIf="userIsAuthenticated" class="mx-2 pointer" >
+      <a mat-button routerLink="/posts" routerLinkActive="mat-accent">My Posts</a>
+    </span>
+    <span class="mx-2 pointer">
+      <a mat-button routerLink="/addPost" routerLinkActive="mat-accent">Create Post</a>
+    </span>
+    <span class="mx-2 pointer">
+      <a mat-button routerLink="/aboutUs" routerLinkActive="mat-accent">About Us</a>
+    </span>
+  </div>
+
+  <div>
+    <span *ngIf="!userIsAuthenticated" class="mx-2 pointer">
+      <a mat-button routerLink="/login" routerLinkActive="mat-accent">LOGIN</a>
+    </span>
+    <span *ngIf="!userIsAuthenticated" class="mx-2 pointer">
+      <a mat-button routerLink="/signup" routerLinkActive="mat-accent">SIGNUP</a>
+    </span>
+    <span *ngIf="userIsAuthenticated" class="mx-2 pointer">
+      <button mat-button (click)="onLogout()">
+        LOGOUT
+      </button>
+    </span>
+  </div>
+
+</mat-toolbar>

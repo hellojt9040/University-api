@@ -1,0 +1,17 @@
+.mat-raised-button{
+  margin: 2rem;
+  outline: none;
+}
+
+.image-preview{
+  height: 9rem;
+  margin: 2rem;
+}
+
+.avatar{
+  height: 100%;
+}
+
+.aboutUs{
+  width: inherit;
+}

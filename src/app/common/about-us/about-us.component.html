@@ -1,0 +1,20 @@
+<div class="aboutUs" enctype="multipart/form-data" [formGroup]="uploadAvatar">
+  <button mat-raised-button type="button" color="warn" (click)="clickUpload.click()">Upload</button>
+  <input hidden type="file" #clickUpload (change)=onFilePicked($event)>
+  <!-- <div class="alert alert-danger" *ngIf="!uploadAvatar.get('avatar').valid && uploadAvatar.get('avatar').dirty">
+    <p>Wrong file type, try again</p>
+  </div> -->
+  <div class="row">
+    <div class="image-preview m-auto" *ngIf="imagePreview !== '' && imagePreview && uploadAvatar.get('avatar').valid">
+      <img class="avatar" [src]="imagePreview" alt="Avatar">
+    </div>
+    <div class="w-50 m-auto">
+      <strong>Created by helloJT </strong>
+    </div>
+  </div>
+  <div>
+    <p>Imaage fetching from with <strong>Buffer Data</strong></p>
+    <img src="http://localhost:3000/api/user/5eba86ac8fe57447f425a098/avatar" alt="abc">
+  </div>
+</div>
+

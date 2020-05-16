@@ -1,0 +1,8 @@
+.mat-card-actions{
+  display: flex !important;
+  flex-direction: row-reverse !important;
+}
+
+.mat-stepper-horizontal {
+  margin-top: 8px;
+}
