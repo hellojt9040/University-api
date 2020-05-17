@@ -6,7 +6,7 @@ const extractFile = require('../middlewares/extract-file')
 
 
 //  AboutUs
-userRouter.post('/api/aboutUs', extractFile, UserController.aboutUs)
+// userRouter.post('/api/aboutUs', extractFile, UserController.aboutUs)
 
 //  logging in
 userRouter.post('/api/user/login', UserController.userLogin)
