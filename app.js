@@ -1,4 +1,4 @@
-const app = require('./backend/servers/server')
+const app = require('./servers/server')
 const debug = require("debug")("node-angular")
 
 const normalizePort = val => {
