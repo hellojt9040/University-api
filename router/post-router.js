@@ -2,22 +2,23 @@ const express = require('express')
 const postRouter = new express.Router()
 const PostController = require('../controllers/post-controller')
 const auth = require('../middlewares/auth')
+const MyMulter = require('../middlewares/extract-file')
 
 
 // get post
-postRouter.get('/api/posts', auth, PostController.getPost)
+postRouter.get('/universityApi/posts', auth, PostController.getPost)
 
-// get post media
-postRouter.get('/api/post/:userId/media', PostController.getPostMedia)
+// get owner media
+postRouter.get('/universityApi/posts/:facultyId/avatar', PostController.postownerProfilePicture)
 
 //add post
-postRouter.post('/api/posts', auth, PostController.addPost)
+postRouter.post('/universityApi/posts', auth, MyMulter.uploadAsString, PostController.addPost)
 
 //edit post
-postRouter.patch('/api/posts/:id', auth, PostController.editPost)
+postRouter.patch('/universityApi/posts/:id', auth, PostController.editPost)
 
 //delete post
-postRouter.delete('/api/posts/:id', auth, PostController.deletePost)
+postRouter.delete('/universityApi/posts/:id', auth, PostController.deletePost)
 
 
 module.exports = postRouter

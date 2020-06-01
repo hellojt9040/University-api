@@ -16,12 +16,12 @@ const postSchema = new mongoose.Schema(
       maxlength:200
     },
     media:{
-      type:Buffer,
+      type:String,
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: 'User'
+      ref: 'Faculty'
     }
   },{
     timestamps:true
@@ -29,10 +29,5 @@ const postSchema = new mongoose.Schema(
 )
 
 const Post = mongoose.model('Post', postSchema)
-
-/* postSchema.methods.toJSON = function () {
-  const user = this.toObject()
-
-} */
 
 module.exports = Post

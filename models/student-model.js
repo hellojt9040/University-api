@@ -3,8 +3,8 @@ const validator = require('validator')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 
-const userSchema = new mongoose.Schema({
-  userName:{
+const studentSchema = new mongoose.Schema({
+  studentName:{
     type:String,
     trim:true,
     required:true,
@@ -34,8 +34,18 @@ const userSchema = new mongoose.Schema({
         throw new Error('Re-Check password policy') */
     }
   },
-  avatar:{
-    type:Buffer
+  sem:{
+    type:Number,
+    required:true
+  },
+  branch:{
+    type:String,
+    required:true,
+    trim:true,
+  },
+  course:{
+    type:String,
+    trim:true,
   },
   tokens:[{
     token:{
@@ -47,59 +57,59 @@ const userSchema = new mongoose.Schema({
   timestamps:true
 })
 
-// realationship
-userSchema.virtual('task', {
-  ref:'Task',
+/* // realationship
+studentSchema.virtual('post', {
+  ref:'Post',
   localField: '_id',
   foreignField: 'owner'
-})
+}) */
 
 //generating auth token
-userSchema.methods.generateAuthToken = async function() {
-  const user = this;
-  const token = jwt.sign({_id:user._id.toString()}, process.env.JWT_SECRET, {expiresIn:"1h"}); //{expiresIn: '1h'} <- 3rd param
+studentSchema.methods.generateAuthToken = async function() {
+  const student = this;
+  const token = jwt.sign({_id:student._id.toString()}, process.env.JWT_SECRET, {expiresIn:"1h"}); //{expiresIn: '1h'} <- 3rd param
 
-  user.tokens = user.tokens.concat({token});
-  await user.save();
+  student.tokens = student.tokens.concat({token});
+  await student.save();
   return token;
 }
 
 //login security validation
-userSchema.statics.findByCredentials = async (email, password) => {
-  const foundUser = await User.findOne({email});
+studentSchema.statics.findByCredentials = async (email, password) => {
+  const foundStudent = await Student.findOne({email});
 
-  if(!foundUser)
+  if(!foundStudent)
       throw new Error('unable to login, try again !!');
-  const isMatch = await bcrypt.compare(password, foundUser.password);
+  const isMatch = await bcrypt.compare(password, foundStudent.password);
 
   if(!isMatch)
       throw new Error('unable to login, try again !!');
 
-  return foundUser;
+  return foundStudent;
 }
 
 // hash the plain text before saving
-userSchema.pre('save', async function(next) {
-  const user = this;
+studentSchema.pre('save', async function(next) {
+  const student = this;
 
-  if( user.isModified('password')) {
-      user.password = await bcrypt.hash(user.password, 8);
+  if( student.isModified('password')) {
+      student.password = await bcrypt.hash(student.password, 8);
   }
 
   next();
 });
 
 //hidding private data
-userSchema.methods.toJSON = function () {
-  const user = this.toObject();
+studentSchema.methods.toJSON = function () {
+  const student = this.toObject();
 
   //deleting private data and retuning
-  delete user.password;
-  delete user.tokens;
-  delete user.avatar;
-  return user;
+  delete student.password;
+  delete student.tokens;
+  delete student.avatar;
+  return student;
 }
 
-const User = mongoose.model('User',userSchema)
+const Student = mongoose.model('Student',studentSchema)
 
-module.exports = User
+module.exports = Student

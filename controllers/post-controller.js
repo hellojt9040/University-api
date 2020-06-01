@@ -1,23 +1,32 @@
 const Post = require('../models/post-model')
+const Facuty = require('../models/faculty-model')
+
 
 //GET POST
 exports.getPost = async (req, res) => {
   const pageSize = +req.query.pagesize
   const currentPage = +req.query.currentpage
-  const postQwery = Post.find({owner: req.user._id})
+  const postQwery = Post.find({})
   let foundPosts = {}
 
   try {
+    let currentPostCount = await Post.countDocuments()
     if(pageSize && currentPage){
-      foundPosts = await postQwery
-                        .skip(pageSize * (currentPage-1))
+      
+      if(currentPostCount >= 5){
+        foundPosts = await postQwery
+                        .skip(currentPostCount - (pageSize * currentPage))
                         .limit(pageSize)
+      }
+      
+      
     }
 
     //queries
     foundPosts = await postQwery
     const totalPostsLength = await Post.countDocuments()
-
+    
+    
     if(!foundPosts)
       throw new Error()
 
@@ -27,6 +36,8 @@ exports.getPost = async (req, res) => {
       totalPostsLength,
     })
   } catch (error) {
+    console.log(error);
+    
       res.status(404).send({
         message:'no data found, try again !!',
         posts:undefined,
@@ -35,33 +46,41 @@ exports.getPost = async (req, res) => {
   }
 }
 
-//GET POST media
-exports.getPostMedia = async (req, res) => {
+//GET owner profile image
+exports.postownerProfilePicture = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.userId)
+    const postOwner = await Facuty.findById(req.params.facultyId)
 
-    if(!post || !post.media){
-      throw new Error()
-    }
-
-    let postMedia = post.media
+    let postOwnerProfilePicture = postOwner.avatar
+    
     res.set('Content-Type','image/png')
-    res.status(200).send(postMedia)
+    res.status(200).send(postOwnerProfilePicture)
   } catch (error) {
-    res.status(404).send(error)
+    res.status(404).send()
   }
 }
 
 //ADD POST
 exports.addPost = async (req, res) => {
-  const post = new Post({
-    ...req.body,
-    owner:req.user._id});
+  const url = req.protocol+'://'+req.get('host')
 
-  try {
-    await post.save()
+  let mediaUrl = ''
+  if(req.file)
+   mediaUrl = url+'/assets/images/postMedias/'+req.file.filename
+  
+  const post = new Post({
+    title:req.body.title,
+    description:req.body.description,
+    media:mediaUrl,
+    owner:req.faculty._id});
+
+  try {    
+    const createdPost = await post.save()
+    
     res.status(201).send({
-      message:'post created successfully'
+      message:'post created successfully',
+      createdPost:createdPost
+      
     })
 
   } catch (error) {
@@ -75,12 +94,12 @@ exports.editPost = async (req, res) => {
   const updates = Object.keys(req.body);
 
   try {
-      const editedPost = await Post.updateOne({_id:req.body.id, owner:req.user._id}, req.body)
-      console.log(editedPost);
-      if(editedPost.nMOdified > 0)
-        res.status(200).send({message:'Edited successfully'})
-      else
-        throw new Error({message:'Please Authenticate !!'})
+      const editingPost = await Post.findOne({_id:req.params.id, owner: req.faculty._id})
+      if(!editingPost)
+        return res.status(401).send({ message: "Not authorized!" });
+
+      const editedPost = await Post.updateOne({_id:req.body.id, owner:req.faculty._id}, req.body)
+      res.status(200).send({message:'Edited successfully'})
   }catch (error) {
       res.status(401).send({message:error.message});
   }
@@ -88,14 +107,16 @@ exports.editPost = async (req, res) => {
 
 //DELETE POST
 exports.deletePost = async (req, res) => {
-  const deletingTask = await Post.findOne({_id:req.params.id, owner: req.user._id})
+  const deletingTask = await Post.findOne({_id:req.params.id, owner: req.faculty._id})
   try {
     if(!deletingTask)
-      return res.status(401).send({error:'Unable to find the task'});
+      return res.status(401).send({ message: "Unauthorized to delete!" });
 
     await deletingTask.remove()
-    res.status(200).send({success:'successfully !'})
+    res.status(200).send({message:'Deleted successfully'})
   } catch (error) {
-    res.status(500).send({success:error.message})
+    console.log(error);
+    
+    res.status(500).send({message:error.message})
   }
 }
