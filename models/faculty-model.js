@@ -2,8 +2,12 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const authy = require('authy')(process.env.AUTHYAPIKEY)
 
 const facultySchema = new mongoose.Schema({
+  facultyAuthyId:{
+    type:String
+  },
   facultyName:{
     type:String,
     trim:true,
@@ -70,6 +74,33 @@ facultySchema.methods.generateAuthToken = async function() {
   faculty.tokens = faculty.tokens.concat({token});
   await faculty.save();
   return token;
+}
+
+//generating authyId as facultyId
+facultySchema.methods.generateFacultyAuthyId = async function() {
+  const faculty = this
+  let facultyAuthyId = ''
+  // creating authy id using twilio api
+  authy.register_user(faculty.email, faculty.primaryContact, '91', function (err, res) {
+    if(err){
+      throw new Error(err) 
+    }
+      
+    if (!res.user.id || !res.success) {
+      throw new Error('unable to regiter authy') 
+    }
+
+    const authy_id = res.user.id
+    facultyAuthyId = res.user.id.toString()
+    
+    authy.user_status(authy_id, async function (err, res) {
+        if (res.status.authy_id) {
+          facultyAuthyId = res.status.authy_id.toString()
+          faculty.facultyAuthyId = res.status.authy_id.toString()
+          await faculty.save() 
+        }
+    })   
+  })
 }
 
 //login security validation

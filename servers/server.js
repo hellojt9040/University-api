@@ -3,6 +3,7 @@ const express = require('express')
 const path = require('path')
 const postRouter = require('../router/post-router')
 const facultyRouter = require('../router/faculty-router')
+const studentRouter = require('../router/student-router')
 const bodyParser = require('body-parser')
 
 //middleWare
@@ -20,5 +21,7 @@ app.use("/assets/images/postMedias", express.static(path.join("assets/images/pos
 app.use(allowCORS)
 app.use(postRouter)
 app.use(facultyRouter)
+app.use(studentRouter)
+
 
 module.exports = app

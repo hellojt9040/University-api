@@ -12,15 +12,17 @@ exports.getPost = async (req, res) => {
   try {
     let currentPostCount = await Post.countDocuments()
     if(pageSize && currentPage){
-      
-      if(currentPostCount >= 5){
+      if(currentPostCount > pageSize){
         foundPosts = await postQwery
-                        .skip(currentPostCount - (pageSize * currentPage))
+                        .skip(pageSize * (currentPage-1) )
                         .limit(pageSize)
+      }else {
+        foundPosts = await postQwery.limit(pageSize)
       }
       
       
     }
+
 
     //queries
     foundPosts = await postQwery
@@ -36,8 +38,6 @@ exports.getPost = async (req, res) => {
       totalPostsLength,
     })
   } catch (error) {
-    console.log(error);
-    
       res.status(404).send({
         message:'no data found, try again !!',
         posts:undefined,
@@ -99,7 +99,11 @@ exports.editPost = async (req, res) => {
         return res.status(401).send({ message: "Not authorized!" });
 
       const editedPost = await Post.updateOne({_id:req.body.id, owner:req.faculty._id}, req.body)
-      res.status(200).send({message:'Edited successfully'})
+      if (editedPost.n > 0) {
+        res.status(200).json({ success: 'Edited successfully'});
+      } else {
+        res.status(401).json({ message: "Not authorized!" });
+      }
   }catch (error) {
       res.status(401).send({message:error.message});
   }
@@ -114,9 +118,7 @@ exports.deletePost = async (req, res) => {
 
     await deletingTask.remove()
     res.status(200).send({message:'Deleted successfully'})
-  } catch (error) {
-    console.log(error);
-    
+  } catch (error) {  
     res.status(500).send({message:error.message})
   }
 }

@@ -1,4 +1,4 @@
-const Facuty = require('../models/faculty-model')
+const Student = require('../models/student-model')
 const Result = require('../models/studentResult-model')
 const xlsxj = require("xlsx-to-json")
 const sharp = require('sharp')
@@ -8,44 +8,46 @@ const authy = require('authy')(process.env.AUTHYAPIKEY)
 
 
 //LOGIN
-exports.facultyLogin = async (req, res) => {
+exports.studentLogin = async (req, res) => {
   try {
-      const foundFaculty = await Facuty.findByCredentials(req.body.email, req.body.password);
-      const token = await foundFaculty.generateAuthToken();
-      res.send({foundFaculty,token});
+      const foundStudent = await Student.findByCredentials(req.body.email, req.body.password);
+      const token = await foundStudent.generateAuthToken();
+      res.send({foundStudent,token});
   } catch (error) {
       res.status(400).send({message:'Invalid username or password'});
   }
 }
 
 //LOGOUT
-exports.facultyLogout = async (req, res) => {
+exports.studentLogout = async (req, res) => {
   try {
-    req.faculty.tokens = req.faculty.tokens.filter((token) => {
+    req.student.tokens = req.student.tokens.filter((token) => {
         return (token.token !== req.token);
     });
 
-    await req.faculty.save();
-    res.send(req.faculty);
+    await req.student.save();
+    res.send(req.student);
   } catch (error) {
       res.status(400).send({message:'logout failed !'})
   }
 }
 
 //SIGNUP
-exports.facultySignup = async (req, res) => {
+exports.studentSignup = async (req, res) => {
   try {
     const buffer = await sharp(req.file.buffer).resize({height:250,width:250}).png().toBuffer();
     req.body.avatar= buffer
     
-    let newFaculty = new Facuty(req.body)
+    let newStudent = new Student(req.body)
 
-    await newFaculty.save()
-    const token = await newFaculty.generateAuthToken()
-    await newFaculty.generateFacultyAuthyId()
+    await newStudent.save()
+    const token = await newStudent.generateAuthToken()
+    await newStudent.generateStudentAuthyId()
     
-    res.status(201).send({newFaculty, token});
-  } catch (error) {    
+    res.status(201).send({newStudent, token});
+  } catch (error) {
+    console.log(error, 'error');
+    
       if(error.code == 11000)
         return res.status(500).send({
           message:`${req.body.email} is already registered , try with another !`
@@ -55,33 +57,32 @@ exports.facultySignup = async (req, res) => {
 }
 
 //GET AVATAR FIXME:
-exports.getFacultyAvatar = async (req, res) => {
+exports.getStudentAvatar = async (req, res) => {
   try {
-    const faculty = await Facuty.findById(req.params.facultyId)
+    const student = await Student.findById(req.params.studentId)
 
-    if(!faculty || !faculty.avatar){
+    if(!student || !student.avatar){
       throw new Error()
     }
 
-    let facultyAvatar = faculty.avatar
+    let studentAvatar = student.avatar
     res.set('Content-Type','image/png')
-    res.status(200).send(facultyAvatar)
+    res.status(200).send(studentAvatar)
   } catch (error) {
     res.status(404).send(error)
   }
 }
 
-//get faculty profile
-exports.getFacultyProfile = async (req, res) => {
-  const facultyId = req.params.facultyId
+//get student profile
+exports.getStudentProfile = async (req, res) => {
+  const studentId = req.params.studentId
 
   try {
-    const foundFaculty = await Facuty.findOne({_id:facultyId})
+    const foundStudent = await Student.findOne({_id:studentId})
+    if(!foundStudent)
+      return res.status(404).send({message:'Student data not found'})
 
-    if(!foundFaculty)
-      return res.status(404).send({message:'faculty data not found'})
-
-    res.status(200).send(foundFaculty)
+    res.status(200).send(foundStudent)
     
   } catch (error) {
     console.log(error);
@@ -97,10 +98,10 @@ exports.getFacultyProfile = async (req, res) => {
 //send otp 
 exports.sendOtp = async (req, res) => {
   try {
-    let user = await Facuty.findOne({facultyAuthyId:req.body.userAuthyId, primaryContact:req.body.primaryContact})
+    let user = await Student.findOne({studentAuthyId:req.body.userAuthyId, primaryContact:req.body.primaryContact})
     
     if(!user)
-      return res.status(404).send({message:'Invalid faculty data !!'})
+      return res.status(404).send({message:'Invalid student data !!'})
     
     authy.request_sms(req.body.userAuthyId, force=true, function (err, res) {
       console.log(res,'.message')
@@ -110,7 +111,6 @@ exports.sendOtp = async (req, res) => {
       })
     res.status(200).send({success:true})
   } catch (error) {
-    console.log(error, 'otp error');
     res.status(error.status).send({message:'Unable to send OTP'})
   }
 }
@@ -140,11 +140,11 @@ exports.verifyOtp =async (req, res) => {
 
 //restting password
 exports.resetPassword = async (req, res) => {
-  const password = await bcrypt.hash(req.body.password, 8);
-  //const facultyAuthyId = req.body.facultyAuthyId
+  const password = await bcrypt.hash(req.body.password, 8)
   try {
-    const updatedFaculty = await Facuty.updateOne({password})
-    if (updatedFaculty.n > 0) {
+    const updatedStudent = await Student.updateOne({password})
+
+    if (updatedStudent.n > 0) {
       res.status(200).json({ success: 'Password reset successfully'})
     } else {
       res.status(401).json({ message: "Not authorized!" })
@@ -155,26 +155,11 @@ exports.resetPassword = async (req, res) => {
   }
 }
 
-//ABOUT US
-exports.aboutUs = async (req, res) => {
-  try {
-    const buffer = await sharp(req.file.buffer).resize({height:250,width:250}).png().toBuffer();
-
-  const newFaculty = new Faculty({avatar:buffer})
-    await newFaculty.save()
-    res.status(201).send({message:'successfully'})
-  } catch (error) {
-    res.status(error.status).send({message:error.message})
-  }
-}
 
 //uploading student result data using excel
 exports.uploadSuccess = (req, res) => {
   const destination = req.file.destination
   const resultFilePath = destination+ '/'+req.file.filename
-
-  
-  
 
   xlsxj({
     input: resultFilePath, 

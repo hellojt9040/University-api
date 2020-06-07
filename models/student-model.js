@@ -2,13 +2,28 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const authy = require('authy')(process.env.AUTHYAPIKEY)
 
 const studentSchema = new mongoose.Schema({
+  studentAuthyId:{
+    type:String
+  },
   studentName:{
     type:String,
     trim:true,
     required:true,
     minlength:4
+  },
+  rollNo:{
+    type:String,
+    required:true,
+    unique:true,
+    trim:true
+  },
+  branch:{
+    type:String,
+    required:true,
+    trim:true
   },
   email:{
     type:String,
@@ -34,18 +49,16 @@ const studentSchema = new mongoose.Schema({
         throw new Error('Re-Check password policy') */
     }
   },
-  sem:{
-    type:Number,
+  avatar:{
+    type:Buffer
+  },
+  gender:{
+    type:String,
     required:true
   },
-  branch:{
+  primaryContact:{
     type:String,
-    required:true,
-    trim:true,
-  },
-  course:{
-    type:String,
-    trim:true,
+    required:true
   },
   tokens:[{
     token:{
@@ -57,12 +70,6 @@ const studentSchema = new mongoose.Schema({
   timestamps:true
 })
 
-/* // realationship
-studentSchema.virtual('post', {
-  ref:'Post',
-  localField: '_id',
-  foreignField: 'owner'
-}) */
 
 //generating auth token
 studentSchema.methods.generateAuthToken = async function() {
@@ -72,6 +79,34 @@ studentSchema.methods.generateAuthToken = async function() {
   student.tokens = student.tokens.concat({token});
   await student.save();
   return token;
+}
+
+//generating authyId as studentId
+studentSchema.methods.generateStudentAuthyId = async function() {
+  const student = this
+  let studentAuthyId = ''
+  
+  // creating authy id using twilio api
+  authy.register_user(student.email, student.primaryContact, '91', function (err, res) {
+    if(err){
+      throw new Error(err) 
+    }
+
+    if (!res.user.id || !res.success) {
+      throw new Error('unable to regiter authy') 
+    }
+
+    const authy_id = res.user.id
+    studentAuthyId = res.user.id.toString()
+    
+    authy.user_status(authy_id, async function (err, res) {
+        if (res.status.authy_id) {
+          studentAuthyId = res.status.authy_id.toString()
+          student.studentAuthyId = res.status.authy_id.toString()
+          await student.save() 
+        }
+    })   
+  })
 }
 
 //login security validation
@@ -93,7 +128,7 @@ studentSchema.pre('save', async function(next) {
   const student = this;
 
   if( student.isModified('password')) {
-      student.password = await bcrypt.hash(student.password, 8);
+    student.password = await bcrypt.hash(student.password, 8);
   }
 
   next();
