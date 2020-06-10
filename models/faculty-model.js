@@ -27,16 +27,6 @@ const facultySchema = new mongoose.Schema({
   password:{
     type:String,
     required:true,
-    validate(value){
-      if(value.includes('password'))
-        throw new Error("entered password field can't contain word: 'password'")
-
-      /* if (!value.match(/[a-z]/g) &&
-          !value.match(/[A-Z]/g) &&
-          !value.match(/[0-9]/g) &&
-          !value.match(/[^a-zA-Z\d]/g))
-        throw new Error('Re-Check password policy') */
-    }
   },
   avatar:{
     type:Buffer
