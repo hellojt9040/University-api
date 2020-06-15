@@ -87,7 +87,7 @@ studentSchema.methods.generateStudentAuthyId = async function() {
   let studentAuthyId = ''
   
   // creating authy id using twilio api
-  authy.register_user(student.email, student.primaryContact, '91', function (err, res) {
+  authy.register_user(student.email, student.primaryContact, '61', function (err, res) {
     if(err){
       throw new Error(err) 
     }

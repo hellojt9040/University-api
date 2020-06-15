@@ -71,7 +71,7 @@ facultySchema.methods.generateFacultyAuthyId = async function() {
   const faculty = this
   let facultyAuthyId = ''
   // creating authy id using twilio api
-  authy.register_user(faculty.email, faculty.primaryContact, '91', function (err, res) {
+  authy.register_user(faculty.email, faculty.primaryContact, '61', function (err, res) {
     if(err){
       throw new Error(err) 
     }
